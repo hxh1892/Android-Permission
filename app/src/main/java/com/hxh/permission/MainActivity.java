@@ -106,6 +106,8 @@ public class MainActivity extends AppCompatActivity
                 Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
                 intent.setData(Uri.parse("package:" + getPackageName()));
                 startActivity(intent);
+
+                finish();
             }
             else
             {
