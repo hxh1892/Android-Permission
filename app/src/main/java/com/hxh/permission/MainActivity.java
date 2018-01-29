@@ -1,6 +1,8 @@
 package com.hxh.permission;
 
 import android.Manifest;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -100,14 +102,33 @@ public class MainActivity extends AppCompatActivity
                     !ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) ||
                     !ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CAMERA))
             {
-                Toast.makeText(this, "在该页面中点击“权限”进入，开启“相机”和“存储空间”权限\n(部分机型只有“相机”权限)", Toast.LENGTH_LONG).show();
+                new AlertDialog.Builder(this)
+                        .setMessage("前往应用权限设置处设置权限")
+                        .setPositiveButton("OK", new DialogInterface.OnClickListener()
+                        {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which)
+                            {
+                                Toast.makeText(MainActivity.this, "在该页面中点击“权限”进入，开启“相机”和“存储空间”权限\n(部分机型只有“相机”权限)", Toast.LENGTH_LONG).show();
 
-                //启动系统权限设置界面
-                Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-                intent.setData(Uri.parse("package:" + getPackageName()));
-                startActivity(intent);
+                                //启动系统权限设置界面
+                                Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                                intent.setData(Uri.parse("package:" + getPackageName()));
+                                startActivity(intent);
 
-                finish();
+                                finish();
+                            }
+                        })
+                        .setNegativeButton("Cancel", new DialogInterface.OnClickListener()
+                        {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which)
+                            {
+                                finish();
+                            }
+                        })
+                        .create()
+                        .show();
             }
             else
             {
