@@ -1,139 +1,114 @@
 package com.hxh.permission;
 
 import android.Manifest;
-import android.app.AlertDialog;
-import android.content.DialogInterface;
+import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
-import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
-import com.hxh.test_permission.R;
+import com.tbruyelle.rxpermissions2.Permission;
+import com.tbruyelle.rxpermissions2.RxPermissions;
 
-public class MainActivity extends AppCompatActivity
+import io.reactivex.functions.Consumer;
+
+public class PermissionActivity2 extends AppCompatActivity
 {
-    private static final String TAG = "permission_test";
-    private static final int PERMISSION_REQUEST_CODE = 0x1;
+    private Context mContext = this;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+
+        setContentView(R.layout.activity_permission2);
     }
 
-    public void get(View v)
+    public void get1(View v)
     {
-        Log.i(TAG, "checkSelfPermission-WRITE_EXTERNAL_STORAGE=" + (ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED));
-        Log.i(TAG, "checkSelfPermission-CAMERA=" + (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED));
-
-        //Android M及以上处理权限
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-        {
-            //检查是否有写入SD卡的授权
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED &&
-                    ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED)
-            {
-                Toast.makeText(this, "All permission is ok", Toast.LENGTH_SHORT).show();
-
-                //执行操作
-                //...
-            }
-            else
-            {
-                Toast.makeText(this, "All permission is not ok", Toast.LENGTH_SHORT).show();
-
-                //弹出获取权限对话框
-                //如果第二次弹出后，点击下次不再提醒后将不弹出获取权限对话框
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA},
-                        PERMISSION_REQUEST_CODE);
-            }
-        }
-        else
-        {
-            Toast.makeText(this, "No need permission", Toast.LENGTH_SHORT).show();
-
-            //执行操作
-            //...
-        }
+        getPermission1();
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults)
+    public void get2(View v)
     {
-        if (requestCode == PERMISSION_REQUEST_CODE)
-        {
-            //第二次弹出获取权限对话框，点击下次不再提醒后将返回false
-            Log.i(TAG, "shouldShowRequestPermissionRationale-WRITE_EXTERNAL_STORAGE=" + ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.WRITE_EXTERNAL_STORAGE));
-            Log.i(TAG, "shouldShowRequestPermissionRationale-CAMERA=" + ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CAMERA));
+        getPermission2();
+    }
 
-            boolean isPermissionOk = true;
-
-            for (int index = 0; index < permissions.length; index++)
-            {
-                String permission = permissions[index];
-
-                Log.i(TAG, "permission=" + permission);
-
-                if (grantResults[index] != PackageManager.PERMISSION_GRANTED)
+    @SuppressLint("CheckResult")
+    private void getPermission1()
+    {
+        //监听具体的某一个权限是否进行了授权
+        new RxPermissions(this)
+                .requestEach(Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                .subscribe(new io.reactivex.functions.Consumer<Permission>()
                 {
-                    isPermissionOk = false;
-
-                    Log.i(TAG, "isPermissionOk=false---permission=" + permission);
-                }
-            }
-
-            if (isPermissionOk)
-            {
-                Log.i(TAG, "All permission is ok");
-
-                //执行操作
-                //...
-            }
-            else if ((Build.VERSION.SDK_INT < Build.VERSION_CODES.N_MR1 &&
-                    !ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) ||
-                    !ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CAMERA))
-            {
-                new AlertDialog.Builder(this)
-                        .setMessage("前往应用权限设置处设置权限")
-                        .setPositiveButton("OK", new DialogInterface.OnClickListener()
+                    @Override
+                    public void accept(Permission permission)
+                    {
+                        if (permission.granted)
                         {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which)
-                            {
-                                Toast.makeText(MainActivity.this, "在该页面中点击“权限”进入，开启“相机”和“存储空间”权限\n(部分机型只有“相机”权限)", Toast.LENGTH_LONG).show();
+                            Toast.makeText(mContext, "All permission is ok", Toast.LENGTH_SHORT).show();
 
-                                //启动系统权限设置界面
-                                Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-                                intent.setData(Uri.parse("package:" + getPackageName()));
-                                startActivity(intent);
-
-                                finish();
-                            }
-                        })
-                        .setNegativeButton("Cancel", new DialogInterface.OnClickListener()
+                            //用户已经同意权限
+                            //执行操作
+                            //...
+                        }
+                        else if (permission.shouldShowRequestPermissionRationale)
                         {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which)
-                            {
-                                finish();
-                            }
-                        })
-                        .create()
-                        .show();
-            }
-            else
-            {
-                finish();
-            }
-        }
+                            //用户拒绝了该权限，没有选中『不再询问』,再次启动时，还会提示请求权限的对话框
+//                            Toast.makeText(mContext, "未授权权限，部分功能不能使用", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(mContext, "All permission is not ok", Toast.LENGTH_SHORT).show();
+
+                            finish();
+                        }
+                        else
+                        {
+                            //用户拒绝了该权限，并且选中『不再询问』
+                            //启动系统权限设置界面
+                            Toast.makeText(mContext, "在该页面中点击“权限”进入，开启“电话”权限", Toast.LENGTH_SHORT).show();
+
+                            Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                            intent.setData(Uri.parse("package:" + getPackageName()));
+                            startActivity(intent);
+
+                            finish();
+                        }
+                    }
+                });
+    }
+
+    @SuppressLint("CheckResult")
+    private void getPermission2()
+    {
+        //监听所有权限是否进行了授权
+        new RxPermissions(this)
+                .request(Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                .subscribe(new Consumer<Boolean>()
+                {
+                    @Override
+                    public void accept(Boolean aBoolean)
+                    {
+                        if (aBoolean)
+                        {
+                            Toast.makeText(mContext, "All permission is ok", Toast.LENGTH_SHORT).show();
+
+                            //用户已经同意权限
+                            //执行操作
+                            //...
+                        }
+                        else
+                        {
+                            //只要有一个权限被拒绝，就会执行
+//                            Toast.makeText(mContext, "未授权权限，部分功能不能使用", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(mContext, "All permission is not ok", Toast.LENGTH_SHORT).show();
+
+                            finish();
+                        }
+                    }
+                });
     }
 }

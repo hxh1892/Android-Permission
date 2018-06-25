@@ -1,22 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
+    android:orientation="vertical"
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:layout_height="match_parent">
 
     <Button
         android:layout_width="match_parent"
         android:layout_height="50dp"
-        android:onClick="na"
-        android:text="Native"
-        android:textAllCaps="false"/>
+        android:onClick="get1"
+        android:text="get1"/>
 
     <Button
         android:layout_width="match_parent"
         android:layout_height="50dp"
-        android:onClick="rx"
-        android:textAllCaps="false"
-        android:text="RxPermission"/>
+        android:onClick="get2"
+        android:text="get2"/>
 
 </LinearLayout>
